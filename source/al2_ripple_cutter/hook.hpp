@@ -43,14 +43,21 @@ namespace apn::ripple_cutter
 				// ホストウィンドウのメニューを取得します。
 				auto menu = ::GetMenu(hive.aviutl2_window);
 
+				// 「編集」のテキストです。
+				auto edit_string = tr(L"Menu", L"編集");
+
 				// 「編集」のインデックスを取得します。
-				auto edit_index = find_menu_item(menu, L"編集");
+				auto edit_index = find_menu_item(menu, edit_string);
 
 				// 「編集」メニューを取得します。
 				auto edit_menu = ::GetSubMenu(menu, edit_index);
 
+				// 「オブジェクトを切り取り」のテキストです。
+				auto cut_string = my::format(L"{/}{/}",
+					tr(L"Menu", L"オブジェクトを切り取り"), L"\tCtrl+X");
+
 				// 「オブジェクトを切り取り」のインデックスを取得します。
-				auto cut_index = find_menu_item(edit_menu, L"オブジェクトを切り取り\tCtrl+X");
+				auto cut_index = find_menu_item(edit_menu, cut_string);
 
 				// 「オブジェクトを切り取り」のIDを取得します。
 				cut_id = ::GetMenuItemID(edit_menu, cut_index);
@@ -112,6 +119,10 @@ namespace apn::ripple_cutter
 			{
 				MY_TRACE_FUNC("{/hex}, {/hex}, {/}, {/}, {/hex}", menu, flags, x, y, hwnd);
 
+				// コンフィグハンドルが無効の場合は何もしません。
+				if (!tr.config)
+					return orig_proc(menu, flags, x, y, reserved, hwnd, rc);
+
 				// ホストウィンドウではない場合は何もしません。
 				if (hwnd != hive.aviutl2_window)
 					return orig_proc(menu, flags, x, y, reserved, hwnd, rc);
@@ -127,8 +138,11 @@ namespace apn::ripple_cutter
 				// メニュー項目のテキストを取得します。
 				auto menu_item_text = my::get_menu_item_text(menu, result, MF_BYCOMMAND);
 
+				// 「切り取り」のテキストです。
+				auto cut_string = tr(L"Menu", L"切り取り");
+
 				// タイムラインで「切り取り」が実行された場合は
-				if (menu_item_text == L"切り取り")
+				if (menu_item_text == cut_string)
 				{
 					// 「メニュー➡編集➡オブジェクトを切り取り」のIDを取得できた場合は
 					if (auto cut_id = get_cut_id())
