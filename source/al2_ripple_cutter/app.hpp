@@ -49,7 +49,7 @@ namespace apn::ripple_cutter
 		{
 			MY_TRACE_FUNC("");
 
-			// レイヤーメニューとオブジェクトメニューを登録します。
+			// レイヤー・オブジェクト・編集メニューに登録します。
 			{
 				struct menu_item_t {
 					LPCWSTR name; void (*func)(EDIT_SECTION* edit);
@@ -63,6 +63,8 @@ namespace apn::ripple_cutter
 				{
 					host->register_layer_menu(menu_item.name, menu_item.func);
 					host->register_object_menu(menu_item.name, menu_item.func);
+					host->register_edit_menu(menu_item.name, menu_item.func);
+
 				}
 			}
 
