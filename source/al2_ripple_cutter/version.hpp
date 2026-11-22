@@ -9,6 +9,6 @@ namespace apn::ripple_cutter
 		//
 		// コンストラクタです。
 		//
-		version_t() : version_base_t(L"リップルカット", L"🐍リップルカット🔖", L"r4") {}
+		version_t() : version_base_t(L"リップルカット", L"🐍リップルカット🔖", L"r5") {}
 	} version;
 }
