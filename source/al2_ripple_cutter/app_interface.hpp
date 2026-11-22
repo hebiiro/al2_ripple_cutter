@@ -15,5 +15,6 @@ namespace apn::ripple_cutter
 		virtual void cut_from_cursor_to_end() = 0;
 		virtual void cut_timeline_with_range() = 0;
 		virtual void cut_timeline_with_object() = 0;
+		virtual void cut_without_select_range() = 0;
 	} *app = nullptr;
 }

@@ -18,7 +18,6 @@ namespace apn::ripple_cutter
 			debug.init();
 			config_io.init();
 			main_window.init(idd_main);
-			hook.init();
 
 			// コンフィグをファイルから読み込みます。
 			config_io.read();
@@ -34,7 +33,6 @@ namespace apn::ripple_cutter
 			MY_TRACE_FUNC("");
 
 			// 各種終了処理を実行します。
-			hook.exit();
 			main_window.exit();
 			config_io.exit();
 			debug.exit();
@@ -58,6 +56,7 @@ namespace apn::ripple_cutter
 					{ L"リップルカット\\カーソル位置からオブジェクトの終了位置までカット", [](EDIT_SECTION* edit) { app_impl.cut_from_cursor_to_end(edit); }, },
 					{ L"リップルカット\\TL全体を選択オブジェクト範囲でカット", [](EDIT_SECTION* edit) { app_impl.cut_timeline_with_range(edit); }, },
 					{ L"リップルカット\\TL全体を選択オブジェクト毎にカット", [](EDIT_SECTION* edit) { app_impl.cut_timeline_with_object(edit); }, },
+					{ L"リップルカット\\フレーム範囲選択を無視して切り取り", [](EDIT_SECTION* edit) { ::PostMessage(main_window, WM_COMMAND, idc_cut_without_select_range, 0); }, },
 				};
 				for (const auto menu_item : menu_items)
 				{
@@ -245,6 +244,119 @@ namespace apn::ripple_cutter
 
 			// 編集セクションを開始します。
 			editor.handle->call_edit_section([](EDIT_SECTION* edit) { app_impl.cut_timeline_with_object(edit); });
+		}
+
+		//
+		// フレーム範囲選択を無視して「メニュー➡編集➡オブジェクトを切り取り」を実行します。
+		//
+		virtual void cut_without_select_range() override
+		{
+			MY_TRACE_FUNC("");
+
+			//
+			// この関数は、指定されたテキストのメニュー項目のインデックスを返します。
+			//
+			constexpr auto find_menu_item = [](HMENU menu, const std::wstring& lhs) -> int
+			{
+				// メニュー項目の数を取得します。
+				auto nb_menu_items = ::GetMenuItemCount(menu);
+
+				// メニュー項目を走査します。
+				for (auto i = 0; i < nb_menu_items; i++)
+				{
+					// メニュー項目のテキストを取得します。
+					auto rhs = my::get_menu_item_text(menu, i, MF_BYPOSITION);
+
+					// 指定されたテキストの場合は、そのインデックスを返します。
+					if (lhs == rhs) return i;
+				}
+
+				// 見つからなかった場合は-1を返します。
+				return -1;
+			};
+
+			//
+			// この関数は、「メニュー➡編集➡オブジェクトを切り取り」のIDを返します。
+			//
+			constexpr auto get_cut_id = [](HWND hwnd) -> UINT
+			{
+				// ホストウィンドウのメニューを取得します。
+				auto menu = ::GetMenu(hwnd);
+
+				// 「編集」のテキストです。
+				auto edit_string = tr(L"Menu", L"編集");
+
+				// 「編集」のインデックスを取得します。
+				auto edit_index = find_menu_item(menu, edit_string);
+
+				// 「編集」メニューを取得します。
+				auto edit_menu = ::GetSubMenu(menu, edit_index);
+
+				// 「オブジェクトを切り取り」のテキストです。
+				auto cut_string = my::format(L"{/}{/}",
+					tr(L"Menu", L"オブジェクトを切り取り"), L"\tCtrl+X");
+
+				// 「オブジェクトを切り取り」のインデックスを取得します。
+				auto cut_index = find_menu_item(edit_menu, cut_string);
+
+				// 「オブジェクトを切り取り」のIDを取得して返します。
+				return ::GetMenuItemID(edit_menu, cut_index);
+			};
+
+			// コンフィグハンドルが無効の場合は何もしません。
+			if (!tr.config) return;
+
+			// 編集ハンドルが無効の場合は何もしません。
+			if (!editor.handle) return;
+
+			// ホストウィンドウを取得します。
+			auto hwnd = editor.handle->get_host_app_window();
+
+			// 「メニュー➡編集➡オブジェクトを切り取り」のIDを取得します。
+			auto cut_id = get_cut_id(hwnd);
+			if (!cut_id) return;
+
+			// 編集情報です。
+			EDIT_INFO edit_info = {
+				.select_range_start = -1,
+				.select_range_end = -1,
+			};
+
+			// 編集セクションを開始します。
+			editor.handle->call_edit_section_param(
+				&edit_info, [](void* param, EDIT_SECTION* edit)
+			{
+				// 編集情報を取得しておきます。
+				*(EDIT_INFO*)param = *edit->info;
+
+				// 一時的にフレーム範囲選択を解除します。
+				edit->set_select_range(-1, -1);
+			});
+
+			// 「メニュー➡編集➡オブジェクトを切り取り」を実行します。
+			::SendMessage(hwnd, WM_COMMAND, cut_id, 0);
+
+			// フレーム範囲選択が有効の場合は
+			if (edit_info.select_range_start != -1 &&
+				edit_info.select_range_end != -1)
+			{
+				// 編集セクションを開始します。
+				editor.handle->call_edit_section_param(
+					&edit_info, [](void* param, EDIT_SECTION* edit)
+				{
+					// 編集情報を取得します。
+					auto& edit_info = *(EDIT_INFO*)param;
+
+					// フレーム範囲選択を復元します。
+					edit->set_select_range(
+						edit_info.select_range_start,
+						edit_info.select_range_end);
+				});
+			}
+
+			// そのまま続けてアンドゥなどのキーボード操作ができるように、
+			// ホストウィンドウにフォーカスを移動します。
+			::SetFocus(hwnd);
 		}
 	} app_impl;
 }

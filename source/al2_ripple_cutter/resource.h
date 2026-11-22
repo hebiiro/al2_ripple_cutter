@@ -5,8 +5,9 @@
 #define idd_main                        100
 #define idc_cut_from_start_to_cursor    1000
 #define idc_cut_from_cursor_to_end      1001
-#define idc_cut_timeline_with_range       1002
-#define idc_cut_timeline_with_object      1003
+#define idc_cut_timeline_with_range     1002
+#define idc_cut_timeline_with_object    1003
+#define idc_cut_without_select_range    1004
 
 // Next default values for new objects
 // 
