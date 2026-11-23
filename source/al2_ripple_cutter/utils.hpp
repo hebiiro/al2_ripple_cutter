@@ -106,6 +106,14 @@ namespace apn::ripple_cutter
 		}
 
 		//
+		// フレーム番号を秒に変換して返します。
+		//
+		inline double frame_to_sec(double frame)
+		{
+			return frame / edit_info.rate * edit_info.scale;
+		}
+
+		//
 		// フレームマーク用のメモを返します。
 		// テスト用です。現在は使用されていません。
 		//
@@ -394,7 +402,42 @@ namespace apn::ripple_cutter
 		void move_object_start(OBJECT_HANDLE object, int frame)
 		{
 			MY_TRACE_FUNC("{/}", frame);
+#if 1
+			// 予め、最初のエフェクトの"再生位置"を変更します。
 
+			// エディット情報が有効の場合は
+			if (edit_info.rate > 0 && edit_info.scale > 0)
+			{
+				// オブジェクトの位置を取得します。
+				auto object_layer_frame = edit->get_object_layer_frame(object);
+
+				// 先頭のエフェクトを取得します。
+				if (auto effect = edit->find_effect(object, nullptr))
+				{
+					// エフェクト項目を名前を取得します。
+					auto item = tr(L"Effect", L"再生位置");
+
+					// トラックバー項目の値を取得できた場合は
+					if (auto track_value = double {}; edit->get_effect_track_value(
+						effect, item.c_str(), (double)object_layer_frame.start, &track_value))
+					{
+						// 指定された位置まで値をずらします。
+						auto new_value = track_value + frame_to_sec(frame - object_layer_frame.start);
+
+						// ホストアプリの仕様に近づくように補正します。
+						new_value = ceil(new_value * 1000) / 1000;
+
+						// 値を文字列化します。
+						auto item_value = my::format("{/}", new_value);
+
+						// エフェクトの項目値を変更します。
+						auto result_set_effect_item_value =
+							edit->set_effect_item_value(effect, item.c_str(), item_value.c_str());
+						MY_TRACE_INT(result_set_effect_item_value);
+					}
+				}
+			}
+#endif
 			// まず、指定された位置より左にある中間点を削除します。
 
 			// 中間点の数を取得します。
