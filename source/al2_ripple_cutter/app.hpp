@@ -258,7 +258,7 @@ namespace apn::ripple_cutter
 			//
 			// この関数は、指定されたテキストのメニュー項目のインデックスを返します。
 			//
-			constexpr auto find_menu_item = [](HMENU menu, const std::wstring& lhs) -> int
+			constexpr auto find_menu_item = [](HMENU menu, const std::wstring& rhs) -> int
 			{
 				// メニュー項目の数を取得します。
 				auto nb_menu_items = ::GetMenuItemCount(menu);
@@ -267,10 +267,11 @@ namespace apn::ripple_cutter
 				for (auto i = 0; i < nb_menu_items; i++)
 				{
 					// メニュー項目のテキストを取得します。
-					auto rhs = my::get_menu_item_text(menu, i, MF_BYPOSITION);
+					auto lhs = my::get_menu_item_text(menu, i, MF_BYPOSITION);
 
-					// 指定されたテキストの場合は、そのインデックスを返します。
-					if (lhs == rhs) return i;
+					// メニュー項目のテキストが指定されたテキストから始まる場合は、
+					// そのインデックスを返します。
+					if (lhs.starts_with(rhs)) return i;
 				}
 
 				// 見つからなかった場合は-1を返します。
@@ -295,8 +296,7 @@ namespace apn::ripple_cutter
 				auto edit_menu = ::GetSubMenu(menu, edit_index);
 
 				// 「オブジェクトを切り取り」のテキストです。
-				auto cut_string = my::format(L"{/}{/}",
-					tr(L"Menu", L"オブジェクトを切り取り"), L"\tCtrl+X");
+				auto cut_string = tr(L"Menu", L"オブジェクトを切り取り");
 
 				// 「オブジェクトを切り取り」のインデックスを取得します。
 				auto cut_index = find_menu_item(edit_menu, cut_string);
