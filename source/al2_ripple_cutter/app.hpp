@@ -18,6 +18,7 @@ namespace apn::ripple_cutter
 			debug.init();
 			config_io.init();
 			main_window.init(idd_main);
+			hook.init();
 
 			// コンフィグをファイルから読み込みます。
 			config_io.read();
@@ -33,6 +34,7 @@ namespace apn::ripple_cutter
 			MY_TRACE_FUNC("");
 
 			// 各種終了処理を実行します。
+			hook.exit();
 			main_window.exit();
 			config_io.exit();
 			debug.exit();

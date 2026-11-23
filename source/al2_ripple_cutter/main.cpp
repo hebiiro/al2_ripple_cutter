@@ -6,6 +6,7 @@
 #include "utils.hpp"
 #include "debug.hpp"
 #include "main_window.hpp"
+#include "hook.hpp"
 #include "config_io.hpp"
 #include "app.hpp"
 

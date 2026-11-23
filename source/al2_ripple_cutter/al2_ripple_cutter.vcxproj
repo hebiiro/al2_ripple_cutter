@@ -164,6 +164,7 @@
     <ClInclude Include="config_io.hpp" />
     <ClInclude Include="debug.hpp" />
     <ClInclude Include="hive.hpp" />
+    <ClInclude Include="hook.hpp" />
     <ClInclude Include="main_window.hpp" />
     <ClInclude Include="pch.h" />
     <ClInclude Include="resource.h" />
